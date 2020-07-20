@@ -2,7 +2,7 @@
 
 # contstants
 # these should be true provided instructions are followed
-REPO="https://raw.githubusercontent.com/redhat-faros/deployer/master"
+REPO="https://raw.githubusercontent.com/project-faros/farosctl/master"
 OC="https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz"
 SELINUX_MODULE="""
 module faros 1.0;
