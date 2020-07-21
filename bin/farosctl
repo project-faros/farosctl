@@ -60,7 +60,7 @@ function run() {
     BASTION_SSH_USER=$(whoami)
     CLUSTER_DOMAIN=$(hostname -d | awk -F'.' '!($1=""){print $0}' | xargs echo | tr ' ' '.')
     CLUSTER_NAME=$(hostname -d | awk -F'.' '{print $1}')
-    BOOT_DRIVE=$(for dev in $(lsblk --paths -o NAME | grep '^/'); do mount | grep " on /boot " | grep -o $dev; done)
+    BOOT_DRIVE=$(for dev in $(lsblk --paths -o NAME | grep '^/'); do mount | grep " on /boot " | grep -o $dev; done | awk -F'/' '{ print $3 }')
 
     $ENGINE run --rm $it \
         -v "${CONFIG_DIR}/${CONTEXT}:/data:Z" \
