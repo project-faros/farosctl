@@ -7,6 +7,7 @@ IMAGE="quay.io/faros/cluster-manager"
 VERSION="latest"
 CONTAINER="faros-manager"
 CONTEXT="default"
+SHIM_VERSION="1"
 
 # VERSION PINNING
 if basename "$0" | grep '\.' &>/dev/null; then
@@ -17,7 +18,7 @@ fi
 
 function _bootstrap() {
     # find container engine
-    ENGINE=$(which docker 2> /dev/null || which podman 2> /dev/null)
+    ENGINE=$(which podman 2> /dev/null || which docker 2> /dev/null)
     if [ x${ENGINE} == "x" ]; then
         echo "No container engine found. Please install Podman or Docker." >&2
         exit 1
@@ -72,6 +73,8 @@ function run() {
         -e "CLUSTER_DOMAIN=${CLUSTER_DOMAIN}" \
         -e "CLUSTER_NAME=${CLUSTER_NAME}" \
         -e "BOOT_DRIVE=${BOOT_DRIVE}" \
+        -e "SHIM_VERSION=${SHIM_VERSION}" \
+        -e "SHIM_PATH=$0" \
         ${IMAGE}:${VERSION} \
         $@
 }
@@ -118,6 +121,22 @@ function dir() {
 }
 
 
+function extract() {
+    if [ "$#" -ne 2 ]; then
+        echo "USAGE: extract SOURCE DEST" >&2
+        exit 1
+    fi
+
+    fname=$(run "type -fp $1")
+    if [ "$?" -ne 0 ]; then
+        echo "$1 not found." >&2
+        exit 1
+    fi
+
+    run "cat $fname" > $2
+}
+
+
 function _app_cmds() {
     run ls -1 /app/cli
 }
@@ -148,6 +167,10 @@ function main() {
             dir
             exit $?
             ;;
+        "extract")
+            extract $@
+            exit $?
+            ;;
         "help")
             commands="$(_app_cmds)"
 
@@ -155,6 +178,7 @@ function main() {
             echo ""
             echo "Basic Commands:"
             echo "    dir: Print the cluster context storage directory"
+            echo "    extract: Extract file from application binary"
             echo "    help: Print this text"
             echo "    shell: Start an interactive bash shell in the application namespace"
             echo "    update: Update this application"
