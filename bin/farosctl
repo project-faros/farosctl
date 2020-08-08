@@ -24,13 +24,6 @@ function _bootstrap() {
         exit 1
     fi
 
-    # ensure program is installed
-    if ! $ENGINE images $IMAGE | grep $VERSION &> /dev/null; then
-        echo "Installing $CONTAINER" >&2
-        update
-        echo "" >&2
-    fi
-
     # ensure config directory exists
     if [ -e $CONFIG_DIR/.active ]; then
         CONTEXT=$(cat $CONFIG_DIR/.active)
