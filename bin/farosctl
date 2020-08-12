@@ -75,7 +75,7 @@ function run() {
 
     _ensure_pod
     $ENGINE run --rm $it \
-	--pod $POD_NAME \
+	    --pod $POD_NAME \
         -v "${CONFIG_DIR}/${CONTEXT}:/data:Z" \
         -e "WAN_INT=${WAN_INT}" \
         -e "BASTION_IP_ADDR=${BASTION_IP_ADDR}" \
