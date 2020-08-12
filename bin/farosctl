@@ -1,13 +1,10 @@
 #!/bin/bash
 
 # APPLICATION OPTIONS
+SHIM_VERSION="20081201"
 CONFIG_DIR="$HOME/.config/faros"
-ENGINE=""
 IMAGE="quay.io/faros/cluster-manager"
 VERSION="latest"
-CONTAINER="faros-manager"
-CONTEXT="default"
-SHIM_VERSION="1"
 
 # VERSION PINNING
 if basename "$0" | grep '\.' &>/dev/null; then
@@ -15,12 +12,17 @@ if basename "$0" | grep '\.' &>/dev/null; then
     echo "PINNED VERSION - $VERSION"
 fi
 
+# CONSTANTS
+POD_NAME="$(basename $0)"
+CONTEXT="default"
+ENGINE=""
+
 
 function _bootstrap() {
     # find container engine
-    ENGINE=$(which podman 2> /dev/null || which docker 2> /dev/null)
+    ENGINE=$(which podman 2> /dev/null)
     if [ x${ENGINE} == "x" ]; then
-        echo "No container engine found. Please install Podman or Docker." >&2
+        echo "No compatible container engine found. Please install Podman." >&2
         exit 1
     fi
 
@@ -40,6 +42,21 @@ function _bootstrap() {
 }
 
 
+function _ensure_pod() {
+    if ! $ENGINE pod exists $POD_NAME; then
+        $ENGINE pod create --name $POD_NAME > /dev/null
+    fi
+}
+
+
+function _destroy_pod() {
+    if $ENGINE pod exists $POD_NAME; then
+        $ENGINE pod kill $POD_NAME > /dev/null
+        $ENGINE pod rm $POD_NAME > /dev/null
+    fi
+}
+
+
 function run() {
     it=""
     if [ "$1" == "-it" ]; then
@@ -56,7 +73,9 @@ function run() {
     CLUSTER_NAME=$(hostname -d | awk -F'.' '{print $1}')
     BOOT_DRIVE=$(for dev in $(lsblk --paths -o NAME | grep '^/'); do mount | grep " on /boot " | grep -o $dev; done | awk -F'/' '{ print $3 }')
 
+    _ensure_pod
     $ENGINE run --rm $it \
+	--pod $POD_NAME \
         -v "${CONFIG_DIR}/${CONTEXT}:/data:Z" \
         -e "WAN_INT=${WAN_INT}" \
         -e "BASTION_IP_ADDR=${BASTION_IP_ADDR}" \
@@ -103,6 +122,7 @@ function context() {
 
 
 function update() {
+    _destroy_pod
     $ENGINE pull $IMAGE:$VERSION
     run ""
     echo ""
