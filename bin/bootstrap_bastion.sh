@@ -36,6 +36,9 @@ else
 fi
 echo ''
 
+## INSTALL DEPENDENCIES
+sudo dnf -y install checkpolicy wget
+
 ## CONFIGURE SELINUX
 if [ $(getenforce) == "Enforcing" ]; then
     if [ $can_sudo -eq 0 ]; then
