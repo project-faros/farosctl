@@ -2,7 +2,7 @@
 
 # APPLICATION OPTIONS
 #             YYMMDD##
-SHIM_VERSION="21080802"
+SHIM_VERSION="21080803"
 CONFIG_DIR="$HOME/.config/faros"
 IMAGE="quay.io/faros/cluster-manager"
 VERSION="latest"
@@ -73,8 +73,8 @@ function run() {
     BASTION_STUBBED_DEVICES=$(jq -cn --arg inarr "$(lspci -kD -d 10de: | egrep '(^[0-9a-z]|Kernel driver in use:)' | grep -B 1 'Kernel driver in use: pci-stub' | egrep '^[0-9a-z]')" '{ items: $inarr | split("\n") }')
     BASTION_UNMOUNTED_DRIVES=$(grep -v "$(lsblk --tree | egrep '((\/\S*$|\[SWAP\])|^[a-z])' | egrep -B 1 '^[^a-z]' | grep disk | awk '{ print $1 }')" <<< $(lsblk -nd -o NAME | grep -v zram) | xargs echo)
     BOOT_DRIVE=$(for dev in $(lsblk --paths -o NAME | grep '^/'); do mount | grep " on /boot " | grep -o $dev; done | awk -F'/' '{ print $3 }')
-    CLUSTER_DOMAIN=$(hostnamectl | grep 'Static hostname:' | awk '{ print $3 }' | awk -F'.' '!($1=""){print $0}' | xargs echo | tr ' ' '.')
-    CLUSTER_NAME=$(hostnamectl | grep 'Static hostname:' | awk '{ print $3 }' | awk -F'.' '{print $1}')
+    CLUSTER_DOMAIN=$(hostnamectl | grep 'Static hostname:' | awk '{ print $3 }' | awk -F'.' '!($1="")!($2=""){print $0}' | xargs echo | tr ' ' '.')
+    CLUSTER_NAME=$(hostnamectl | grep 'Static hostname:' | awk '{ print $3 }' | awk -F'.' '{print $2}')
 
     _ensure_pod
     $ENGINE run --rm $it \
